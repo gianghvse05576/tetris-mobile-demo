@@ -71,9 +71,6 @@ public class Tetromino : MonoBehaviour
 
             if (x < 0 || x >= width || y < 0)
                 return false;
-
-            if (grid[x, y] != null)
-                return false;
         }
 
         return true;
