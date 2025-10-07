@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class Tetromino : MonoBehaviour
 {
+    public RandomTetromino spawner;
     public Vector3 rotationPoint;
     private float previousTime;
     public float fallTime = 0.8f;
@@ -44,6 +45,10 @@ public class Tetromino : MonoBehaviour
                 transform.position += Vector3.up;
                 AddToGrid();
                 this.enabled = false;
+                if (spawner != null)
+                {
+                    spawner.SpawnRandomTetromino();
+                }
             }
 
             previousTime = Time.time;
@@ -62,17 +67,21 @@ public class Tetromino : MonoBehaviour
         }
     }
 
-    bool ValidMove()
+bool ValidMove()
+{
+    foreach (Transform child in transform)
     {
-        foreach (Transform child in transform)
-        {
-            int x = Mathf.RoundToInt(child.transform.position.x);
-            int y = Mathf.RoundToInt(child.transform.position.y);
-
-            if (x < 0 || x >= width || y < 0)
-                return false;
-        }
-
-        return true;
+        int x = Mathf.RoundToInt(child.transform.position.x);
+        int y = Mathf.RoundToInt(child.transform.position.y);
+        if (x < 0 || x >= width || y < 0)
+            return false;
+        if (y >= height)
+            continue;
+        if (grid[x, y] != null)
+            return false;
     }
+
+    return true;
+}
+
 }
