@@ -4,20 +4,50 @@ public class RandomTetromino : MonoBehaviour
 {
     public GameObject[] tetrominoes;
 
-    public Vector3 spawnPosition = new Vector3(5, 18, 0);
+    public Vector3 spawnPosition = new Vector3(5, 21, 0);
+
+    public Transform nextSpawnPoint;
 
     private GameObject currentTetromino;
+    private GameObject nextTetromino;
 
     void Start()
     {
-        SpawnRandomTetromino();
+
+        CreateNextTetromino();
+
+        SpawnFromNext();
     }
 
-    public void SpawnRandomTetromino()
+    private void CreateNextTetromino()
     {
-        int index = Random.Range(0, tetrominoes.Length);
-        currentTetromino = Instantiate(tetrominoes[index], spawnPosition, Quaternion.identity);
+        int randomIndex = Random.Range(0, tetrominoes.Length);
+        nextTetromino = Instantiate(tetrominoes[randomIndex], nextSpawnPoint.position, Quaternion.identity);
+        nextTetromino.transform.localScale = Vector3.one * 0.5f; 
+        SetPreviewMode(nextTetromino, true); 
+    }
 
+    public void SpawnFromNext()
+    {
+        currentTetromino = Instantiate(nextTetromino, spawnPosition, Quaternion.identity);
+        currentTetromino.transform.localScale = Vector3.one; 
         currentTetromino.GetComponent<Tetromino>().spawner = this;
+        SetPreviewMode(currentTetromino, false); 
+
+        Destroy(nextTetromino);
+
+        CreateNextTetromino();
+    }
+
+    private void SetPreviewMode(GameObject obj, bool isPreview)
+    {
+        var script = obj.GetComponent<Tetromino>();
+        if (script != null) script.enabled = !isPreview;
+
+        var rb = obj.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.simulated = !isPreview; // tắt vật lý
+        }
     }
 }

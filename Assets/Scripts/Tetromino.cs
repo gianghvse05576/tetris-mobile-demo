@@ -46,7 +46,7 @@ public class Tetromino : MonoBehaviour
                 AddToGrid();
                 this.enabled = false;
                 DeleteGrid();
-                spawner?.SpawnRandomTetromino();
+                spawner?.SpawnFromNext();
             }
 
             previousTime = Time.time;
@@ -74,6 +74,7 @@ public class Tetromino : MonoBehaviour
                 DeleteRow(y);
                 MoveRowsDown(y + 1);
                 y--;
+                GameManager.Instance.AddScore(100);
             }
         }
     }
@@ -129,5 +130,4 @@ public class Tetromino : MonoBehaviour
 
         return true;
     }
-
 }
