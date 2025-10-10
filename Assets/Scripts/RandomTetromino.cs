@@ -13,9 +13,7 @@ public class RandomTetromino : MonoBehaviour
 
     void Start()
     {
-
         CreateNextTetromino();
-
         SpawnFromNext();
     }
 
@@ -23,16 +21,16 @@ public class RandomTetromino : MonoBehaviour
     {
         int randomIndex = Random.Range(0, tetrominoes.Length);
         nextTetromino = Instantiate(tetrominoes[randomIndex], nextSpawnPoint.position, Quaternion.identity);
-        nextTetromino.transform.localScale = Vector3.one * 0.5f; 
-        SetPreviewMode(nextTetromino, true); 
+        nextTetromino.transform.localScale = Vector3.one * 0.5f;
+        SetPreviewMode(nextTetromino, true);
     }
 
     public void SpawnFromNext()
     {
         currentTetromino = Instantiate(nextTetromino, spawnPosition, Quaternion.identity);
-        currentTetromino.transform.localScale = Vector3.one; 
+        currentTetromino.transform.localScale = Vector3.one;
         currentTetromino.GetComponent<Tetromino>().spawner = this;
-        SetPreviewMode(currentTetromino, false); 
+        SetPreviewMode(currentTetromino, false);
 
         Destroy(nextTetromino);
 
@@ -43,11 +41,5 @@ public class RandomTetromino : MonoBehaviour
     {
         var script = obj.GetComponent<Tetromino>();
         if (script != null) script.enabled = !isPreview;
-
-        var rb = obj.GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            rb.simulated = !isPreview; // tắt vật lý
-        }
     }
 }
