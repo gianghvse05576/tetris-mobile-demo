@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-    public RandomTetromino spawner;
 
     [Header("UI")]
     public TextMeshProUGUI scoreText;
@@ -13,16 +12,17 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI gameOverText;
     public TextMeshProUGUI highScoreText;
     public TextMeshProUGUI levelText;
-    public bool isGameOver = false;
-    public float fallTime = 0.8f;
     public Button startButton;
 
     [Header("Gameplay")]
-    private int lastScore = 0;
+    public RandomTetromino spawner;
+    public bool isGameOver = false;
     private int score = 0;
     private int level = 0;
-    private float elapsedTime = 0f;
     private int highScore = 0;
+    private int lastScore = 0;
+    public float fallTime = 0.8f;
+    private float elapsedTime = 0f;
 
     void Awake()
     {
@@ -30,16 +30,25 @@ public class GameManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    void OnEnable()
+    {
+        GameEvents.OnScoreAdded += AddScore;
+        GameEvents.OnLineCleared += HandleLineCleared;
+        GameEvents.OnGameOver += HandleGameOver;
+    }
+
+    void OnDisable()
+    {
+        GameEvents.OnScoreAdded -= AddScore;
+        GameEvents.OnLineCleared -= HandleLineCleared;
+        GameEvents.OnGameOver -= HandleGameOver;
+    }
+
     void Start()
     {
         highScore = PlayerPrefs.GetInt("HighScore", 0);
         UpdateScoreUI();
         UpdateTimeUI();
-
-        if (startButton != null)
-        {
-            startButton.onClick.AddListener(OnStartButtonClick);
-        }
     }
 
     void Update()
@@ -51,62 +60,63 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void AddScore(int amount)
+    void AddScore(int amount)
     {
         score += amount;
         if (score - lastScore >= 500)
         {
             lastScore = score;
-            level += 1;
+            level++;
             if (fallTime > 0.1f)
                 fallTime -= 0.1f;
+            GameEvents.RaiseLevelUp(level);
         }
+
         if (score > highScore)
         {
             highScore = score;
             PlayerPrefs.SetInt("HighScore", highScore);
         }
+
         UpdateScoreUI();
+    }
+
+    void HandleLineCleared(int lines)
+    {
+        int scoreToAdd = lines * 100;
+        GameEvents.RaiseScoreAdded(scoreToAdd);
     }
 
     void UpdateScoreUI()
     {
         if (scoreText != null)
-            scoreText.text = "Score: " + score;
-
+            scoreText.text = $"Score: {score}";
         if (highScoreText != null)
-            highScoreText.text = "Top: " + highScore;
-
+            highScoreText.text = $"Top: {highScore}";
         if (levelText != null)
-            levelText.text = "Level: " + level;
+            levelText.text = $"Level: {level}";
     }
 
     void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int minutes = Mathf.FloorToInt(elapsedTime / 60);
-            int seconds = Mathf.FloorToInt(elapsedTime % 60);
-
-            timeText.text = $"Time: {minutes}:{seconds:00}";
-        }
+        if (timeText == null) return;
+        int m = Mathf.FloorToInt(elapsedTime / 60);
+        int s = Mathf.FloorToInt(elapsedTime % 60);
+        timeText.text = $"Time: {m}:{s:00}";
     }
 
-    public void GameOver()
+    void HandleGameOver()
     {
         isGameOver = true;
-        gameOverText.text = $"Game Over\nScore: {score}\nHigh Score: {highScore}";
+        if (gameOverText != null)
+            gameOverText.text = $"Game Over\nScore: {score}\nHigh Score: {highScore}";
     }
 
-    public float upLevel()
-    {
-        return fallTime;
-    }
+    public float GetFallTime() => fallTime;
 
     public void OnStartButtonClick()
     {
-        spawner.enabled = true;
         startButton.gameObject.SetActive(false);
+        spawner.enabled = true;
     }
 }
-

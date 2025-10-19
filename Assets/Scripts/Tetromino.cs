@@ -2,11 +2,10 @@
 
 public class Tetromino : MonoBehaviour
 {
-    public static Tetromino Instance;
     public RandomTetromino spawner;
     public Vector3 rotationPoint;
     private float previousTime;
-    public float fallTime = 0.8f;
+    private float fallTime;
     private static int height = 20;
     private static int width = 10;
     private static Transform[,] grid = new Transform[width, height];
@@ -14,12 +13,7 @@ public class Tetromino : MonoBehaviour
     void Start()
     {
         transform.position = new Vector3(width / 2 - 1, height - 1, 0);
-        fallTime = GameManager.Instance.upLevel();
-    }
-
-    private void Awake()
-    {
-        Instance = this;
+        fallTime = GameManager.Instance.GetFallTime();
     }
 
     void Update()
@@ -37,42 +31,28 @@ public class Tetromino : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            Vector3 originalPosition = transform.position;
-            Quaternion originalRotation = transform.rotation;
+            Vector3 originalPos = transform.position;
+            Quaternion originalRot = transform.rotation;
 
             transform.Rotate(0, 0, 90);
 
-            if (ValidMove())
+            if (!ValidMove())
             {
-                return;
-            }
-
-            bool adjusted = false;
-
-            for (int i = 1; i <= 2; i++)
-            {
-                transform.position = originalPosition + new Vector3(-i, 0, 0);
-                if (ValidMove())
+                bool adjusted = false;
+                for (int i = 1; i <= 2; i++)
                 {
-                    adjusted = true;
-                    break;
+                    transform.position = originalPos + new Vector3(-i, 0, 0);
+                    if (ValidMove()) { adjusted = true; break; }
+                    transform.position = originalPos + new Vector3(i, 0, 0);
+                    if (ValidMove()) { adjusted = true; break; }
                 }
-
-                transform.position = originalPosition + new Vector3(i, 0, 0);
-                if (ValidMove())
+                if (!adjusted)
                 {
-                    adjusted = true;
-                    break;
+                    transform.rotation = originalRot;
+                    transform.position = originalPos;
                 }
-            }
-
-            if (!adjusted)
-            {
-                transform.rotation = originalRotation;
-                transform.position = originalPosition;
             }
         }
-
 
         if (Time.time - previousTime > (Input.GetKey(KeyCode.DownArrow) ? fallTime / 10 : fallTime))
         {
@@ -84,7 +64,7 @@ public class Tetromino : MonoBehaviour
                 AddToGrid();
                 this.enabled = false;
                 DeleteGrid();
-                fallTime = GameManager.Instance.upLevel();
+                fallTime = GameManager.Instance.GetFallTime();
                 CheckGameOver();
             }
 
@@ -96,9 +76,8 @@ public class Tetromino : MonoBehaviour
     {
         foreach (Transform child in transform)
         {
-            int x = Mathf.RoundToInt(child.transform.position.x);
-            int y = Mathf.RoundToInt(child.transform.position.y);
-
+            int x = Mathf.RoundToInt(child.position.x);
+            int y = Mathf.RoundToInt(child.position.y);
             if (x >= 0 && x < width && y >= 0 && y < height)
                 grid[x, y] = child;
         }
@@ -106,6 +85,8 @@ public class Tetromino : MonoBehaviour
 
     void DeleteGrid()
     {
+        int linesCleared = 0;
+
         for (int y = 0; y < height; y++)
         {
             if (IsFullRow(y))
@@ -113,18 +94,19 @@ public class Tetromino : MonoBehaviour
                 DeleteRow(y);
                 MoveRowsDown(y + 1);
                 y--;
-                GameManager.Instance.AddScore(100);
+                linesCleared++;
             }
         }
+
+        if (linesCleared > 0)
+            GameEvents.RaiseLineCleared(linesCleared);
     }
 
     bool IsFullRow(int y)
     {
         for (int x = 0; x < width; x++)
-        {
             if (grid[x, y] == null)
                 return false;
-        }
         return true;
     }
 
@@ -173,28 +155,18 @@ public class Tetromino : MonoBehaviour
         return true;
     }
 
-
     void CheckGameOver()
     {
-        bool checkFull = false;
-
         for (int x = 0; x < width; x++)
         {
             if (grid[x, height - 1] != null)
             {
-                checkFull = true;
-                break;
+                GameEvents.RaiseGameOver();
+                spawner.enabled = false;
+                return;
             }
         }
 
-        if (checkFull)
-        {
-            GameManager.Instance.GameOver();
-            spawner.enabled = false;
-        }
-        else
-        {
-            spawner?.SpawnFromNext();
-        }
+        spawner?.SpawnFromNext();
     }
 }
