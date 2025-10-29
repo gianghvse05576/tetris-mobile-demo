@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-    public RandomTetromino spawner;
 
     [Header("UI")]
     public TextMeshProUGUI scoreText;
@@ -15,12 +14,12 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI levelText;
     public bool isGameOver = false;
     public float fallTime = 0.8f;
-    public Button startButton;
+
 
     [Header("Gameplay")]
     private int lastScore = 0;
     private int score = 0;
-    private int level = 0;
+    private int level = 1;
     private float elapsedTime = 0f;
     private int highScore = 0;
 
@@ -35,11 +34,6 @@ public class GameManager : MonoBehaviour
         highScore = PlayerPrefs.GetInt("HighScore", 0);
         UpdateScoreUI();
         UpdateTimeUI();
-
-        if (startButton != null)
-        {
-            startButton.onClick.AddListener(OnStartButtonClick);
-        }
     }
 
     void Update()
@@ -101,12 +95,6 @@ public class GameManager : MonoBehaviour
     public float upLevel()
     {
         return fallTime;
-    }
-
-    public void OnStartButtonClick()
-    {
-        spawner.enabled = true;
-        startButton.gameObject.SetActive(false);
     }
 }
 

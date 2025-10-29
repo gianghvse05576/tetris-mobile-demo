@@ -13,7 +13,6 @@ public class Tetromino : MonoBehaviour
 
     void Start()
     {
-        transform.position = new Vector3(width / 2 - 1, height - 1, 0);
         fallTime = GameManager.Instance.upLevel();
     }
 

@@ -4,7 +4,7 @@ public class RandomTetromino : MonoBehaviour
 {
     public GameObject[] tetrominoes;
 
-    public Vector3 spawnPosition = new Vector3(5, 21, 0);
+    public Vector3 spawnPosition;
 
     public Transform nextSpawnPoint;
 
